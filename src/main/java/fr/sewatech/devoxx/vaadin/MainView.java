@@ -1,36 +1,31 @@
 package fr.sewatech.devoxx.vaadin;
 
+import com.vaadin.data.util.sqlcontainer.SQLContainer;
+import com.vaadin.data.util.sqlcontainer.connection.SimpleJDBCConnectionPool;
+import com.vaadin.data.util.sqlcontainer.query.TableQuery;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServiceSession;
 import com.vaadin.ui.*;
 
 import java.io.Serializable;
+import java.sql.SQLException;
 
 public class MainView extends CustomComponent {
 
     public MainView() {
         Layout layout = new VerticalLayout();
 
-        HorizontalLayout bar = new HorizontalLayout();
-        bar.setWidth("100%");
-        Label label = new Label();
-        label.setValue(VaadinServiceSession.getCurrent().getAttribute(String.class));
-        bar.addComponent(label);
-        Button logoutButton = new Button("logout");
-        bar.addComponent(logoutButton);
-        bar.setComponentAlignment(logoutButton, Alignment.TOP_RIGHT);
-        logoutButton.addClickListener(new LogoutBehaviour());
-        layout.addComponent(bar);
+        Table table = new Table();
+        layout.addComponent(table);
 
-        final Label hello = new Label("Hello");
-        layout.addComponent(hello);
-
-        final TextField textField = new TextField();
-        layout.addComponent(textField);
-
-        Button button = new Button("Click");
-        button.addClickListener(new SayHelloClickListener(hello, textField));
-        layout.addComponent(button);
+        try {
+            SimpleJDBCConnectionPool connectionPool = new SimpleJDBCConnectionPool("org.h2.Driver", "jdbc:h2:~/test", "sa", "");
+            TableQuery tableQuery = new TableQuery("Person", connectionPool);
+            SQLContainer dataSource = new SQLContainer(tableQuery);
+            table.setContainerDataSource(dataSource);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
         setCompositionRoot(layout);
     }
